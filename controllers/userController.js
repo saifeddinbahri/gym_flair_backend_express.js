@@ -31,6 +31,7 @@ export async function signup(req, res) {
 // Signin
 export async function signin (req, res) {
     const { username, password } = req.body;
+    const cookieAge = 1000 * 60 * 60 * 24 * 30
     try {
         // Check if user exists
         const user = await UserModel.findOne({ username });
@@ -47,6 +48,32 @@ export async function signin (req, res) {
         // Create and send JWT token
         const token = jwt.sign({ userId: user._id }, 'your_secret_key', { expiresIn: '10 days' });
         res.json({ token });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export async function signWeb (req, res) {
+    const { username, password } = req.body;
+    console.log(req.body)
+    const cookieAge = 1000 * 60 * 60 * 24 * 30
+    try {
+        // Check if user exists
+        const user = await UserModel.findOne({ username });
+        
+        if (!user) {
+            return res.status(401).json({ message: "Invalid username " });
+        }
+
+        // Check password
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: "Invalid password" });
+        }
+        // Create and send JWT token
+        const token = jwt.sign({ userId: user._id, role: user.role }, 'your_secret_key', { expiresIn: '10 days' });
+        res.cookie('__md_e', token, {httpOnly: true, maxAge: cookieAge})
+        res.json({ redirectTo: '/views/equipments' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -171,4 +198,8 @@ export async function editPassword(req, res) {
     }
     
 }
+
+function generateAccessToken(id, role) {
+    return jwt.sign({uid:id, role:role}, process.env.TOKEN_SECRET, { expiresIn: '30d' })
+  }
 

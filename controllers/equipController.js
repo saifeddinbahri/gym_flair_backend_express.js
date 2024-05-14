@@ -23,7 +23,6 @@ export async function showEquipments(req, res) {
         return !equipment.reservedBy.end; 
       });
   
-      console.log(availableEquipments);
       res.status(200).json(availableEquipments);
     } catch (error) {
       console.error('Error fetching and updating equipments:', error);

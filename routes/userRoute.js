@@ -1,6 +1,6 @@
 import  express  from 'express';
 import { signin, signup, profile, editProfile, editBirth, editEmail, editUsername, 
-  editPassword, deleteProfile, editProfileImage } from "../controllers/userController.js";
+  editPassword, deleteProfile, editProfileImage, signWeb } from "../controllers/userController.js";
 import { authenticateToken } from "../middleware/authentication.js";
 import multer from 'multer';
 import path from 'path';
@@ -25,6 +25,7 @@ const router = express.Router();
 
 router.route("/signup").post(upload.single('image'),signup)
 router.route("/signin").post(signin)
+router.route("/login-web").post(signWeb)
 router.route("/profile").get(authenticateToken, profile)
 router.route("/edit-profile-photo").post(authenticateToken, upload.single('image'),editProfileImage)
 router.route("/edit-username").post(authenticateToken, editUsername)
