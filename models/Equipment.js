@@ -7,7 +7,7 @@ const EquipmentSchema = new mongoose.Schema({
     reservedBy: {
         user : {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
+            ref: 'users',
         },
         start: Date,
         end: Date

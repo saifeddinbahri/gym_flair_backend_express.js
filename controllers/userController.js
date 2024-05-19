@@ -31,6 +31,7 @@ export async function signup(req, res) {
 // Signin
 export async function signin (req, res) {
     const { username, password } = req.body;
+    console.log(req.body)
     const cookieAge = 1000 * 60 * 60 * 24 * 30
     try {
         // Check if user exists

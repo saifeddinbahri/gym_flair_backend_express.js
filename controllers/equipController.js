@@ -7,12 +7,14 @@ export async function showEquipments(req, res) {
   
       for (let i = 0; i < equipments.length; i++) {
         const equipment = equipments[i];
-  
+        
         if (equipment.reservedBy && equipment.reservedBy.end) {
-          const endDate = new Date(equipment.reservedBy.end);
           const currentDate = new Date();
-  
+          const endDate = new Date(equipment.reservedBy.end);
+          
           if (endDate < currentDate) {
+            console.log(endDate)
+            console.log(currentDate)
             equipment.reservedBy = {};
             await equipment.save();
           }
@@ -30,6 +32,48 @@ export async function showEquipments(req, res) {
     }
   }
 
+  export async function allShowEquipments(req, res) {
+    try {
+      // Fetch equipments with user populated if reservedBy.user is not null
+      const equipments = await EquipmentModel.find()
+      let data = []
+      // Transform the reservedBy field
+      for (let i=0; i<equipments.length; i++) {
+        let equipment = equipments[i]
+        if(equipment.reservedBy.end){
+          console.log(equipment.reservedBy)
+          await equipment.populate('reservedBy.user', 'username')
+        }
+        const reservedByText = formatReservedBy(equipment.reservedBy);
+        data=[...data, {
+           nom: equipment.nom,
+           prix: equipment.prix, 
+           reservation: reservedByText,
+           desc: equipment.description,
+           image: equipment.image
+          }] 
+      }
+      res.json(data);
+    } catch (error) {
+      console.error('Error fetching equipments:', error);
+      res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
+  }
+
+  const formatReservedBy = (reservedBy) => {
+    if (!reservedBy || !reservedBy.start || !reservedBy.end) {
+      return 'Not reserved';
+    }
+    console.log(reservedBy)
+    const start = new Date(reservedBy.start);
+    const end = new Date(reservedBy.end);
+    const duration = (end - start) / (1000 * 60 * 60); // duration in hours
+  
+    return `${reservedBy.user.username} reserved on ${start.toDateString()} for ${duration} hours`;
+  };
+
+ 
+
 export default async function reserveEquipment(req, res) {
     try {
         
@@ -37,21 +81,25 @@ export default async function reserveEquipment(req, res) {
     
         // Find the equipment by ID
         const equipment = await EquipmentModel.findById(equipmentId);
-    
         if (!equipment) {
           return res.status(404).json({ error: 'Equipment not found' });
         }
     
         // Update the reservedBy field with user ID and reservation dates
+        const dstart = new Date(start) 
+        const dend = new Date(end)
+        dstart.setHours(dstart.getHours()+1)
+        dend.setHours(dend.getHours()+1)
         equipment.reservedBy = {
           user: req.userId,
-          start,
-          end
+          start: dstart,
+          end: dend
         };
-    
         // Save the updated equipment
         await equipment.save();
-    
+        console.log("this is when reserving")
+        console.log(start)
+        console.log(end)
         res.status(200).json({ message: 'Equipment reserved successfully' });
       } catch (error) {
         console.error('Error reserving equipment:', error);
