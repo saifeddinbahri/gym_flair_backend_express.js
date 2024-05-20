@@ -29,9 +29,9 @@ export async function create(req, res) {
         const { nom, capacite, date, start, end, coach }=req.body;
         const cour = new CourModel({nom, capacite, date, start, end, coach});
         await cour.save();
-        res.status(200).send('Cour added successfully');
+        res.status(200).json({message: "yes"});
     } catch (error) {
-        res.status(400).send(error.message)
+        res.status(400).json({message: "error"});
     }
 };
 
@@ -59,10 +59,19 @@ export async function reserveCours(req, res) {
 
 //Show cour
 export async function showCour(req,res) {
-    const {id} = req.params;
-    const cour = await CourModel.findById(id);
+    const {id} = req.body;
+    const cour = await CourModel.findById(id).populate('reservedBy').populate('coach').lean().exec();
         if(cour){
-            res.json(cour);
+            res.json({
+                _id: cour._id,
+                capacite: cour.capacite,
+                count: cour.reservedBy.length,
+                nom: cour.nom,
+                date: cour.date,
+                start: cour.start,
+                end: cour.end,
+                coach: cour.coach
+            });
         }else{
             res.status(404).json({message:"Cour not found"});
         }
@@ -71,23 +80,23 @@ export async function showCour(req,res) {
 
 //Edit cour
 export async function editCour (req, res)  {
-    const {nom,capacite,jours,heuredebut,heurefin,equipments,coachs} = req.body;
-    const {id}=req.params;
+    const {id,nom,capacite,date,start,end,coach} = req.body;
+    console.log(req.body)
     try {
-        await CourModel.findByIdAndUpdate(id, {nom,capacite,jours,heuredebut,heurefin,equipments,coachs});
+        await CourModel.findByIdAndUpdate(id, {nom,capacite,date,start,end,coach});
         res.json({ message: "Cour updated successfully" });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: "error"});
     }
 };
 
 //delete cour
 export async function deleteCour(req,res) {
     try {
-       const {id} = req.params;
+       const {id} = req.body;
        await CourModel.findByIdAndDelete(id)
-       res.send('Cour deleted successfully')
+       res.json({message: "yes"})
     } catch (error) {
-        res.status(400).send(error.message)
+        res.json({message: "error"})
     }
 };

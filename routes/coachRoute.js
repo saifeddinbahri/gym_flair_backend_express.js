@@ -23,14 +23,14 @@ const upload = multer({ storage: storage })
 
 const router = express.Router();
 
-router.route("/create").post(authenticateToken, upload.single('photo'), create)
-router.route("/one").post(showCoach)
+router.route("/create").post(authenticateToken, upload.single('image'), create)
+router.route("/one").post(authenticateToken, showCoach)
 
 router.route("/").get(showCoachs)
 
 
-router.route("/update").put(authenticateToken, upload.single('photo'), editCoach)
-router.route("/delete").delete(authenticateToken,deleteCoach)
+router.route("/edit").post(authenticateToken, upload.single('image'), editCoach)
+router.route("/delete").post(authenticateToken,deleteCoach)
 
 
 

@@ -21,14 +21,63 @@ try {
     
 }
 
-export async function createEvent(req, res) {
+export async function getEvent(req,res) {
+    const { id } = req.body
     try {
-        const { nom, date, start, photo, desc }=req.body;
+            const event = await EventModel.findById(id).populate('reservedBy').lean().exec();
+            res.status(200).json({
+                _id: event._id,
+                nom: event.nom,
+                date: event.date,
+                desc: event.desc,
+                start:event.start,
+                photo: event.photo,
+                count: event.reservedBy.length
+            })
+        } catch (error) {
+            res.status(500).json({"message": "Server error"})
+            console.error("Error:", error);
+        }
+        
+    }
+
+export async function createEvent(req, res) {
+    
+    try {
+        let { nom, date, start, photo, desc } = req.body;
+        if (req.file) {
+            photo = req.file.filename
+        }
         const cour = new EventModel({nom, date, start, photo, desc});
         await cour.save();
-        res.status(200).send('Event added successfully');
+         
+        res.status(200).json({message: "yes"});
     } catch (error) {
-        res.status(400).send(error.message)
+        res.status(400).json({message: "error"})
+    }
+}
+
+export async function editEvent(req, res) {
+    try {
+        let { id,nom, date, start, photo, desc }=req.body;
+        if (req.file) {
+            photo = req.file.filename
+        }
+        await EventModel.findByIdAndUpdate(id,{nom, date, start, photo, desc})
+        
+        res.status(200).json({message: "yes"});
+    } catch (error) {
+        res.status(400).json({message: "error"})
+    }
+}
+
+export async function deleteEvent(req, res) {
+    const {id} = req.body
+    try {
+        await EventModel.findByIdAndDelete(id)
+        res.json({message: "yes"})
+    }catch(e) {
+        res.json({message: "error"})
     }
 }
 

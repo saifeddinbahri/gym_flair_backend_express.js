@@ -15,12 +15,16 @@ export async function showCoachs(req,res) {
 //create coach
 export async function create(req, res) {
     try {
-        const {firstname, lastname,email,phone,photo,speciality}=req.body;
-        const coach = new CoachModel({firstname, lastname,email,phone,photo,speciality});
-        await coach.save();
-        res.status(201).send('Coach added successfully');
+        if (req.file) {
+            const {firstname, lastname,email,phone,speciality}=req.body;
+            const coach = new CoachModel({firstname, lastname,email,phone,photo: req.file.filename ,speciality});
+            await coach.save();
+            res.status(201).json({message: "yes"});
+        } else {
+            res.json({message: "failed"})
+        }
     } catch (error) {
-        res.status(400).send(error.message)
+        res.status(400).json({message: "error"})
     }
 };
 
@@ -28,7 +32,7 @@ export async function create(req, res) {
 
 //Show coach
 export async function showCoach(req,res) {
-    const {id} = req.params;
+    const {id} = req.body;
     const coach = await CoachModel.findById(id);
         if(coach){
             res.json(coach);
@@ -40,10 +44,12 @@ export async function showCoach(req,res) {
 
 //Edit coach
 export async function editCoach (req, res)  {
-    const {firstname, lastname,email,phone,photo,speciality} = req.body;
-    const {id}=req.params;
+    let {id,firstname, lastname,email,phone,currentImage,speciality} = req.body;
+    if (req.file){
+        currentImage = req.file.filename
+    }
     try {
-        await CoachModel.findByIdAndUpdate(id, {firstname, lastname,email,phone,photo,speciality});
+        await CoachModel.findByIdAndUpdate(id, {firstname, lastname,email,phone,photo: currentImage,speciality});
         res.json({ message: "Coach updated successfully" });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -53,10 +59,10 @@ export async function editCoach (req, res)  {
 //delete coach
 export async function deleteCoach(req,res) {
     try {
-       const {id} = req.params;
+       const {id} = req.body;
        await CoachModel.findByIdAndDelete(id)
-       res.send('Coach deleted successfully')
+       res.json({message: "yes"})
     } catch (error) {
-        res.status(400).send(error.message)
+        res.json({message:"error"})
     }
 };

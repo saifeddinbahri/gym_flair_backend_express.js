@@ -9,13 +9,13 @@ const router = express.Router();
 router.route("/create").post(create)
 
 router.route("/book").post(authenticateToken, reserveCours)
-router.route("/:id").get(showCour)
+router.route("/one").post(authenticateToken, showCour)
 
 router.route("/").get(authenticateToken ,showCours)
 
 
-router.route("/:id").put(authenticateToken,editCour)
-router.route("/:id").delete(authenticateToken,deleteCour)
+router.route("/edit").post(authenticateToken,editCour)
+router.route("/delete").post(authenticateToken,deleteCour)
 
 
 
