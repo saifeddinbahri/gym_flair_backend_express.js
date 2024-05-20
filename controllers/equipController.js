@@ -40,12 +40,23 @@ export async function showEquipments(req, res) {
       // Transform the reservedBy field
       for (let i=0; i<equipments.length; i++) {
         let equipment = equipments[i]
+        if (equipment.reservedBy.end) {
+          const currentDate = new Date();
+          const endDate = new Date(equipment.reservedBy.end);
+          
+          if (endDate < currentDate) {
+            console.log(endDate)
+            console.log(currentDate)
+            equipment.reservedBy = {};
+            await equipment.save();
+          }
+        }
         if(equipment.reservedBy.end){
-          console.log(equipment.reservedBy)
           await equipment.populate('reservedBy.user', 'username')
         }
         const reservedByText = formatReservedBy(equipment.reservedBy);
         data=[...data, {
+           id: equipment._id,
            nom: equipment.nom,
            prix: equipment.prix, 
            reservation: reservedByText,
@@ -64,7 +75,6 @@ export async function showEquipments(req, res) {
     if (!reservedBy || !reservedBy.start || !reservedBy.end) {
       return 'Not reserved';
     }
-    console.log(reservedBy)
     const start = new Date(reservedBy.start);
     const end = new Date(reservedBy.end);
     const duration = (end - start) / (1000 * 60 * 60); // duration in hours
@@ -97,9 +107,6 @@ export default async function reserveEquipment(req, res) {
         };
         // Save the updated equipment
         await equipment.save();
-        console.log("this is when reserving")
-        console.log(start)
-        console.log(end)
         res.status(200).json({ message: 'Equipment reserved successfully' });
       } catch (error) {
         console.error('Error reserving equipment:', error);
@@ -111,12 +118,16 @@ export default async function reserveEquipment(req, res) {
 //create equipment
 export async function create(req, res) {
     try {
-        const { nom, description, image, prix } = req.body;
-        const equipement = new EquipmentModel({ nom, description, image, prix });
-        await equipement.save();
-        res.status(201).send('Equipment added successfully');
+        if(req.file) {
+          const { nom, description, prix } = req.body;
+          const equipement = new EquipmentModel({ nom, description, image:req.file.filename, prix });
+          await equipement.save();
+          res.status(201).json({message: "success"})
+        } else {
+          res.json({message: "failed"})
+        }
     } catch (error) {
-        res.status(400).send(error.message)
+        res.status(400).json({message: "error"})
     }
 };
 
@@ -124,10 +135,17 @@ export async function create(req, res) {
 
 //Show equipment
 export async function showEquipment(req,res) {
-    const {id} = req.params;
-    const equipement = await EquipmentModel.findById(id);
-        if(equipement){
-            res.json(equipement);
+    const { id } = req.body;
+    const equipment = await EquipmentModel.findById(id);
+        if(equipment){
+          const data= {
+             id: equipment._id,
+             nom: equipment.nom,
+             prix: equipment.prix, 
+             description: equipment.description,
+             image: equipment.image
+            }
+            res.json(data);
         }else{
             res.status(404).json({message:"Equipment not found"});
         }
@@ -136,22 +154,43 @@ export async function showEquipment(req,res) {
 
 //Edit equipment
 export async function editEquipment (req, res)  {
-    const {nom,description,image,stock} = req.body;
-    const {id}=req.params;
-    try {
-        await EquipmentModel.findByIdAndUpdate(id, {nom,description,image,stock});
-        res.json({ message: "Equipment updated successfully" });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+  try {
+    let { nom, prix, currentImage, description, id } = req.body;
+    if(req.file) {
+      console.log(req.file.filename)
+      currentImage = req.file.filename
     }
+    // Find the equipment by ID and update the specified fields
+    const updatedEquipment = await EquipmentModel.findByIdAndUpdate(
+        id,
+        {
+            $set: {
+                nom,
+                prix,
+                image: currentImage,
+                description
+            }
+        },
+        { new: true, runValidators: true } // Return the updated document
+    );
+
+    if (!updatedEquipment) {
+        return res.status(404).json({ message: 'Equipment not found' });
+    }
+
+    res.json(updatedEquipment);
+} catch (error) {
+    console.error('Error updating equipment:', error);
+    res.status(500).json({ message: 'Internal Server Error', error: error.message });
+}
 };
 
 //delete equipment
 export async function deleteEquipment(req,res) {
     try {
-       const {id} = req.params;
+       const {id} = req.body;
        await EquipmentModel.findByIdAndDelete(id)
-       res.send('Equipment deleted successfully')
+       res.json({message: "yes"})
     } catch (error) {
         res.status(400).send(error.message)
     }
