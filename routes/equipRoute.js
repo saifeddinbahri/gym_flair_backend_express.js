@@ -25,7 +25,7 @@ const router = express.Router();
 
 router.route("/create").post(authenticateToken, upload.single('image'), create)
 router.route('/reserve').post(authenticateToken, reserveEquipment)
-router.route("/").get(showEquipments)
+router.route("/").get(authenticateToken, showEquipments)
 router.route("/all/").get(authenticateToken, allShowEquipments)
 router.route("/one").post(authenticateToken, showEquipment)
 router.route("/edit").post(authenticateToken, upload.single('image'), editEquipment)

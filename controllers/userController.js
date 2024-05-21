@@ -159,6 +159,7 @@ export async function editUsername (req, res)  {
 
 export async function editBirth (req, res)  {
     const { birth } = req.body
+    console.log(birth)
     try {
         let user = await UserModel.findByIdAndUpdate(req.userId, { birth });
         res.status(200).json({ birth });

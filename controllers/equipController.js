@@ -13,18 +13,26 @@ export async function showEquipments(req, res) {
           const endDate = new Date(equipment.reservedBy.end);
           
           if (endDate < currentDate) {
-            console.log(endDate)
-            console.log(currentDate)
-            equipment.reservedBy = {};
+            equipment.reservedBy = null;
             await equipment.save();
-          }
-        }
+          } 
+        } 
       }
-  
-      const availableEquipments = equipments.filter(equipment => {
-        return !equipment.reservedBy.end; 
+      
+      const availableEquipments = equipments.map(equipment => {
+        var val 
+        console.log(equipment.reservedBy.user == req.userId)
+        if (!equipment.reservedBy.end) {
+          val=false
+        } else if(equipment.reservedBy.user == req.userId) {
+          
+          val = true
+        } else {
+          val = false
+        }
+        return {_id: equipment._id, nom: equipment.nom, image: equipment.image,
+          prix: equipment.prix, description: equipment.description, isYou: val}
       });
-  
       res.status(200).json(availableEquipments);
     } catch (error) {
       console.error('Error fetching and updating equipments:', error);
@@ -86,7 +94,7 @@ export async function showEquipments(req, res) {
 
 export default async function reserveEquipment(req, res) {
     try {
-        
+        console.log(req.body)
         const { equipmentId, start, end } = req.body;
     
         // Find the equipment by ID
