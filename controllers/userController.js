@@ -8,7 +8,7 @@ import jwt from 'jsonwebtoken';
 
 //Signup
 export async function signup(req, res) {
-    const { username, birth, email, phone, role, password } = req.body;
+    const { username, birth, email, role, password } = req.body;
     try {
         // Check if the user already exists
         const existingUser = await UserModel.findOne({ email });
@@ -16,7 +16,7 @@ export async function signup(req, res) {
             return res.status(400).json({ message: "User already exists" });
         }
         // Create new user
-        const newUser = new UserModel({ username, birth, email, phone, photo: req.file.filename, role, password });
+        const newUser = new UserModel({ username, birth, email, photo: req.file.filename, role, password });
         await newUser.save();
         res.json({ message: "User registered successfully" });
     } catch (error) {
@@ -25,7 +25,16 @@ export async function signup(req, res) {
     }
 };
 
+export async function findAllUsers(req, res) {
+    try {
+        const users = await UserModel.find()
+        res.json(users)
+    }catch(e) {
+        res.json({message: "error"})
+    }
+    
 
+}
 
 
 // Signin
@@ -52,7 +61,7 @@ export async function signin (req, res) {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-};
+}
 
 export async function signWeb (req, res) {
     const { username, password } = req.body;
@@ -72,9 +81,8 @@ export async function signWeb (req, res) {
             return res.status(401).json({ message: "Invalid password" });
         }
         // Create and send JWT token
-        const token = jwt.sign({ userId: user._id, role: user.role }, 'your_secret_key', { expiresIn: '10 days' });
-        res.cookie('__md_e', token, {httpOnly: true, maxAge: cookieAge})
-        res.json({ redirectTo: '/views/equipments' });
+        const token = jwt.sign({ userId: user._id }, 'your_secret_key', { expiresIn: '10 days' });
+        res.json({ token, role: user.role });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -97,14 +105,28 @@ export async function profile (req,res) {
        .catch(err=> res.status(500).json({message: err.message}));
 }
 
+export async function profileWeb (req,res) {
+    const { id } = req.body
+    UserModel.findById(id)
+       .then(user=>{
+        if(user){
+            res.json(user);
+        }else {
+            res.status(404).json({message:"User not found"});
+        }
+       })
+       .catch(err=> res.status(500).json({message: err.message}));
+}
 
 
 //Edit profile
 export async function editProfile (req, res)  {
-    const {firstname, lastname,birth,email,phone,photo} = req.body;
-    const {id}=req.params;
+    let { id, firstname, lastname, birth, email, phone, photo, role } = req.body;
+    if(req.file) {
+        photo = req.file.filename
+    }
     try {
-        await UserModel.findByIdAndUpdate(id, {firstname, lastname,birth,email,phone,photo});
+        await UserModel.findByIdAndUpdate(id, { firstname, lastname, birth, email, phone, photo, role });
         res.json({ message: "Profile updated successfully" });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -164,11 +186,11 @@ export async function editEmail (req, res)  {
 //delete profile
 export async function deleteProfile (req,res) {
     try {
-       const {id} = req.params;
+       const {id} = req.body;
        await UserModel.findByIdAndDelete(id)
-       res.send('User deleted successfully')
+       res.json({message: "yes"})
     } catch (error) {
-        res.status(400).send(error.message)
+        res.json({message: "error"})
     }
 };
 

@@ -7,7 +7,6 @@ const UserSchema = new mongoose.Schema({
     birth: Date,
     email: String,
     password: String,
-    phone:Number,
     photo: String, // Champ pour contenir l'URL de l'image de l'utilisateur
     role: { type: String, enum: ['admin', 'employe', 'adherant'] }, // Champ pour spécifier le rôle de l'utilisateur
 })
