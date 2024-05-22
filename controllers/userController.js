@@ -1,4 +1,5 @@
 import UserModel from '../models/User.js';
+import CountModel from '../models/Count.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -221,6 +222,49 @@ export async function editPassword(req, res) {
         res.status(500).json({message: 'An error occurred'})
     }
     
+}
+
+export async function scanCode(code, userId) {
+    
+    try {
+        const user = await CountModel.findOne({ user: userId })
+        if (code === 'enter') {
+            if(user) {
+                res.status(400).json({message: "You already scanner the Qr code"})
+            } else {
+                const user = new CountModel({user: userId})
+                await user.save()
+                res.status(200).json({message: "Success"})
+            }
+        } else if(code === 'out'){
+            if(user) {
+                await user.remove()
+                res.status(200).json({message: "Success"})
+            } else {
+                res.status(400).json({message: "Failed"})
+            }
+        }
+
+    } catch(e) {
+        console.log(e)
+        res.status(200).json({message: "Error"})
+    }
+} 
+
+export async function addCount(req, res) {
+    try {
+        const user = await CountModel.findById(req.userId)
+        if(user) {
+            res.status(400).json({message: "You already scanner the Qr code"})
+        } else {
+            const user = new CountModel({user: req.userId})
+            await user.save()
+            res.status(200).json({message: "Success"})
+        }
+    } catch(e) {
+        console.log(e)
+        res.status(200).json({message: "Error"})
+    }
 }
 
 function generateAccessToken(id, role) {

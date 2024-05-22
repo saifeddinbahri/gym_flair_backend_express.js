@@ -12,12 +12,50 @@ import abonnRoutes from './routes/abonnementRoute.js'
 import abonnerRoutes from './routes/abonnerRoute.js'
 import reservationRoutes from './routes/reservationRoute.js'
 import eventRoutes from './routes/eventRoute.js'
+import jwt from 'jsonwebtoken';
 import viewRoutes from './routes/viewRoutes.js'
+import http from 'http'
+import { Server } from 'socket.io';
+import CountModel from './models/Count.js';
 
 const MONGODB_URI = process.env.MONGODB_URI
 const PORT = process.env.PORT || 5000
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+io.on('connection', async (socket) => {
+    const count = await CountModel.find()
+    io.emit('count', count.length)
+    console.log('a user connected');
+      socket.on('scanCode', async ({code, token}) => {
+        const decodedToken = jwt.verify(token,'your_secret_key');
+        const userId = decodedToken.userId
+        try {
+            const user = await CountModel.findOne({ user: userId })
+            if (code === 'enter') {
+                if(!user)  {
+                    const user = new CountModel({user: userId})
+                    await user.save()
+                    const count = await CountModel.find()
+                    io.emit('count', count.length)
+                }
+            } else if(code === 'out'){
+                if(user) {
+                    await CountModel.deleteOne({_id: user._id})
+                    const count = await CountModel.find()
+                    io.emit('count', count.length)
+                }
+            }
+    
+        } catch(e) {
+            console.log(e)
+            res.status(200).json({message: "Error"})
+        }
+      })
+  });
+
 app.set('view engine', 'ejs')
 app.use(express.json());
 app.use(cors());
@@ -36,24 +74,11 @@ app.use('/subscribe',abonnerRoutes);
 app.use('/reservation',reservationRoutes);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 //connect to the database
 mongoose.connect(MONGODB_URI)
 .then(()=>{
     console.log('connected to the database')
-    app.listen(PORT,()=>{
+    server.listen(PORT,()=>{
         console.log("server is running")
     })
 }).catch(err=>{

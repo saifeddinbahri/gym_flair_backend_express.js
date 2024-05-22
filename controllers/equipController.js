@@ -21,7 +21,6 @@ export async function showEquipments(req, res) {
       
       const availableEquipments = equipments.map(equipment => {
         var val 
-        console.log(equipment.reservedBy.user == req.userId)
         if (!equipment.reservedBy.end) {
           val=false
         } else if(equipment.reservedBy.user == req.userId) {
