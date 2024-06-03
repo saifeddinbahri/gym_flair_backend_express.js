@@ -2,7 +2,8 @@ import  express  from 'express';
 import { signin, signup, profile, editProfile, editBirth, editEmail, editUsername, 
   editPassword, deleteProfile, editProfileImage, signWeb, 
   findAllUsers,
-  profileWeb} from "../controllers/userController.js";
+  profileWeb,
+  getDashboardData} from "../controllers/userController.js";
 import { authenticateToken } from "../middleware/authentication.js";
 import multer from 'multer';
 import path from 'path';
@@ -37,6 +38,7 @@ router.route("/edit-username").post(authenticateToken, editUsername)
 router.route("/edit-password").post(authenticateToken, editPassword)
 router.route("/edit-birth").post(authenticateToken, editBirth)
 router.route("/edit-email").post(authenticateToken, editEmail)
+router.route('/dashboard').get(getDashboardData)
 router.route("/delete").post(authenticateToken,deleteProfile)
 //router.route("/all").get(showUsers)
 

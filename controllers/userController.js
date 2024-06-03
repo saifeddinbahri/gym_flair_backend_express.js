@@ -1,10 +1,36 @@
 import UserModel from '../models/User.js';
 import CountModel from '../models/Count.js';
+import EquipmentModel from '../models/Equipment.js';
+import EventModel from '../models/Event.js';
+import CourModel from '../models/Cour.js';
+import CoachModel from '../models/Coach.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
 
+export async function getDashboardData(req, res) {
+    try {
+        const users = await UserModel.find()
+        const equipments = await EquipmentModel.find()
+        const events = await EventModel.find()
+        const cours = await CourModel.find()
+        const coachs = await CoachModel.find()
+        const count = await CountModel.find().populate('user')
+        res.json({
+            users: users.length,
+            equipments: equipments.length,
+            events: events.length,
+            cours: cours.length,
+            coachs: coachs.length,
+            count: count
+        })
+    } catch(e) {
+        console.log(e)
+        res.json({})
+    }
 
+
+}
 
 
 //Signup
