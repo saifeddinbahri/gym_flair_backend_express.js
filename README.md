@@ -9,5 +9,5 @@ npm install
 ```
 2. Run project
 ```bash
-ng serve
+npm run start
 ```
